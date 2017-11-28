@@ -16,6 +16,7 @@ CREATE TABLE NonWorkingDays (
 DECLARE @StartingYear int = 2010
     , @CutoffYear int = 2030
     , @IncludeFridayAfterThanksgiving bit = 1
+    , @IncludeIllinoisElectionDay bit = 1
     , @Year int
     , @Dt Date
     , @Cnt int
@@ -34,6 +35,16 @@ WHILE @Year < @CutoffYear
         SET @Dt = CAST('12/25/' + CAST(@Year as varchar) as date)
         INSERT INTO NonWorkingDays (IsHoliday, IsWeekend, NonWorkingDay, DayOfWeek, Reason) SELECT 1, 0, @Dt, DATENAME(WEEKDAY, @Dt), 'Christmas Day'
 
+        IF @IncludeIllinoisElectionDay = 1 And @Year % 2 = 0
+            BEGIN
+                SET @Dt = CAST('11/2/' + CAST(@Year as varchar) as date)
+                WHILE DATENAME(WEEKDAY, @Dt) <> 'TUESDAY'
+                    BEGIN
+                        SET @Dt = DATEADD(Day, 1, @Dt)
+                    END
+                INSERT INTO NonWorkingDays (IsHoliday, IsWeekend, NonWorkingDay, DayOfWeek, Reason) SELECT 1, 0, @Dt, DATENAME(WEEKDAY, @Dt), 'General Election Day'
+            END
+            
         BEGIN -- All of the holidays that fall on a specific day of the week
             -- Martin Luther King
             SET @Dt = CAST('1/15/' + CAST(@Year as varchar) as date)
